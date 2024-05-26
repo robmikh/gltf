@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::storage::{Storage, StorageIndex};
 
-use super::{add_and_get_index, buffer::AccessorIndex, node::NodeIndex};
+use super::{buffer::AccessorIndex, node::NodeIndex};
 
 pub type SkinIndex = StorageIndex<Skin>;
 
