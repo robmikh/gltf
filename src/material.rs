@@ -24,7 +24,6 @@ pub struct PbrMetallicRoughness {
     pub base_color_factor: Option<Vec4>,
     pub metallic_factor: f32,
     pub roughness_factor: f32,
-
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -122,26 +121,18 @@ impl MaterialData {
     }
 
     pub fn write_materials(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.materials).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.materials).unwrap()]
     }
 
     pub fn write_textures(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.textures).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.textures).unwrap()]
     }
 
     pub fn write_images(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.images).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.images).unwrap()]
     }
 
     pub fn write_samplers(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.samplers).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.samplers).unwrap()]
     }
 }

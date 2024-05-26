@@ -3,7 +3,10 @@ use serde::{ser::SerializeStruct, Serialize, Serializer};
 use serde_repr::Serialize_repr;
 use serde_with::skip_serializing_none;
 
-use crate::{enum_with_str, storage::{Storage, StorageIndex}};
+use crate::{
+    enum_with_str,
+    storage::{Storage, StorageIndex},
+};
 
 pub trait BufferType: Sized {
     const COMPONENT_TY: AccessorComponentType;
@@ -35,8 +38,14 @@ impl Serialize for MinMax<String> {
         S: Serializer,
     {
         let mut s = serializer.serialize_struct("MinMax", 2)?;
-        s.serialize_field("min", &serde_json::value::RawValue::from_string(self.min.clone()).unwrap())?;
-        s.serialize_field("max", &serde_json::value::RawValue::from_string(self.max.clone()).unwrap())?;
+        s.serialize_field(
+            "min",
+            &serde_json::value::RawValue::from_string(self.min.clone()).unwrap(),
+        )?;
+        s.serialize_field(
+            "max",
+            &serde_json::value::RawValue::from_string(self.max.clone()).unwrap(),
+        )?;
         s.end()
     }
 }
@@ -95,15 +104,13 @@ impl BufferWriter {
         }
         let byte_len = self.buffer.len() - offset;
         let stride = T::stride();
-        let index = self.views.allocate_with(
-            BufferView {
-                buffer: 0,
-                byte_offset: offset,
-                byte_len,
-                stride,
-                target,
-            },
-        );
+        let index = self.views.allocate_with(BufferView {
+            buffer: 0,
+            byte_offset: offset,
+            byte_len,
+            stride,
+            target,
+        });
         index
     }
 
@@ -113,16 +120,14 @@ impl BufferWriter {
         byte_offset: usize,
         len: usize,
     ) -> AccessorIndex {
-        self.accessors.allocate_with(
-            Accessor {
-                buffer_view: view_index.0,
-                byte_offset,
-                count: len,
-                component_ty: T::COMPONENT_TY,
-                ty: T::TY,
-                min_max: None,
-            },
-        )
+        self.accessors.allocate_with(Accessor {
+            buffer_view: view_index.0,
+            byte_offset,
+            count: len,
+            component_ty: T::COMPONENT_TY,
+            ty: T::TY,
+            min_max: None,
+        })
     }
 
     pub fn create_accessor_with_min_max<T: BufferTypeMinMax + Copy>(
@@ -132,19 +137,17 @@ impl BufferWriter {
         len: usize,
         min_max: MinMax<T>,
     ) -> AccessorIndex {
-        self.accessors.allocate_with(
-            Accessor {
-                buffer_view: view_index.0,
-                byte_offset,
-                count: len,
-                component_ty: T::COMPONENT_TY,
-                ty: T::TY,
-                min_max: Some(MinMax {
-                    min: min_max.min.write_value(),
-                    max: min_max.max.write_value(),
-                }),
-            }
-        )
+        self.accessors.allocate_with(Accessor {
+            buffer_view: view_index.0,
+            byte_offset,
+            count: len,
+            component_ty: T::COMPONENT_TY,
+            ty: T::TY,
+            min_max: Some(MinMax {
+                min: min_max.min.write_value(),
+                max: min_max.max.write_value(),
+            }),
+        })
     }
 
     pub fn create_view_and_accessor<T: BufferType + Copy>(
@@ -175,15 +178,11 @@ impl BufferWriter {
     }
 
     pub fn write_buffer_views(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.views).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.views).unwrap()]
     }
 
     pub fn write_accessors(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.accessors).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.accessors).unwrap()]
     }
 
     pub fn buffer_len(&self) -> usize {

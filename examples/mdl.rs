@@ -16,14 +16,23 @@ use id_tree::{
     TreeBuilder,
 };
 
-use util::
-    coordinates::{convert_coordinates, write_and_convert_channel};
+use util::coordinates::{convert_coordinates, write_and_convert_channel};
 
 use gltf::{
     animation::{
         Animation, AnimationInterpolation, AnimationTarget, Animations, Channel, ChannelTarget,
         Sampler,
-    }, buffer::{BufferViewAndAccessorPair, BufferViewTarget, BufferWriter}, export::write_gltf, material::{BaseColorTexture, Image, MagFilter, Material, MaterialData, MinFilter, PbrMetallicRoughness, Texture, Wrap}, node::{MeshIndex, Node, NodeIndex, Nodes}, skin::{Skin, SkinIndex, Skins}, transform::{quat_from_euler, ComponentTransform}, Mesh, Model, Vertex, VertexAttributesSource
+    },
+    buffer::{BufferViewAndAccessorPair, BufferViewTarget, BufferWriter},
+    export::write_gltf,
+    material::{
+        BaseColorTexture, Image, MagFilter, Material, MaterialData, MinFilter,
+        PbrMetallicRoughness, Texture, Wrap,
+    },
+    node::{MeshIndex, Node, NodeIndex, Nodes},
+    skin::{Skin, SkinIndex, Skins},
+    transform::{quat_from_euler, ComponentTransform},
+    Mesh, Model, Vertex, VertexAttributesSource,
 };
 
 struct SkinnedVertex {
@@ -388,7 +397,7 @@ pub fn export<P: AsRef<Path>>(
                 metallic_factor: 0.0,
                 roughness_factor: 1.0,
                 ..Default::default()
-            }
+            },
         });
     }
 
@@ -594,7 +603,6 @@ fn process_animation(
         false
     }
 }
-
 
 fn main() {
     let args: Vec<_> = std::env::args().skip(1).collect();

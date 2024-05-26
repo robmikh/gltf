@@ -39,8 +39,6 @@ impl Nodes {
     }
 
     pub fn write_nodes(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.nodes).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.nodes).unwrap()]
     }
 }

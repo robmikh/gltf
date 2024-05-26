@@ -1,6 +1,9 @@
 use serde::Serialize;
 
-use crate::{enum_with_str, storage::{Storage, StorageIndex}};
+use crate::{
+    enum_with_str,
+    storage::{Storage, StorageIndex},
+};
 
 use super::{buffer::AccessorIndex, node::NodeIndex};
 
@@ -93,8 +96,6 @@ impl Animations {
     }
 
     pub fn write_animations(&self) -> Vec<String> {
-        vec![
-            serde_json::to_string_pretty(&self.animations).unwrap()
-        ]
+        vec![serde_json::to_string_pretty(&self.animations).unwrap()]
     }
 }

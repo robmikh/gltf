@@ -7,8 +7,8 @@ pub mod export;
 pub mod material;
 pub mod node;
 pub mod skin;
-pub mod transform;
 pub mod storage;
+pub mod transform;
 
 pub trait VertexAttributesSource {
     fn attribute_pairs(&self) -> Vec<(&'static str, usize)>;
@@ -45,7 +45,7 @@ macro_rules! enum_with_str {
         #[derive(Copy, Clone, Debug, serde::Serialize)]
         pub enum $name {
             $(
-                #[serde(rename = $str_value)] 
+                #[serde(rename = $str_value)]
                 $var_name,
             )*
         }

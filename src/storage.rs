@@ -13,7 +13,10 @@ impl<T: Sized + Default + Serialize> Clone for StorageIndex<T> {
 }
 impl<T: Sized + Default + Serialize> std::fmt::Debug for StorageIndex<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("StorageIndex").field(&self.0).field(&self.1).finish()
+        f.debug_tuple("StorageIndex")
+            .field(&self.0)
+            .field(&self.1)
+            .finish()
     }
 }
 impl<T: Sized + Default + Serialize> Default for StorageIndex<T> {
@@ -38,14 +41,12 @@ pub struct Storage<T: Sized + Default + Serialize> {
 
 impl<T: Sized + Default + Serialize> Storage<T> {
     pub fn new() -> Self {
-        Self {
-            items: Vec::new()
-        }
+        Self { items: Vec::new() }
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            items: Vec::with_capacity(capacity)
+            items: Vec::with_capacity(capacity),
         }
     }
 
