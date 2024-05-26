@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 
 use crate::add_and_get_index;
 
@@ -16,6 +16,19 @@ impl<T: Sized + Default + Serialize> std::fmt::Debug for StorageIndex<T> {
         f.debug_tuple("StorageIndex").field(&self.0).field(&self.1).finish()
     }
 }
+impl<T: Sized + Default + Serialize> Default for StorageIndex<T> {
+    fn default() -> Self {
+        Self(Default::default(), Default::default())
+    }
+}
+impl<T: Sized + Default + Serialize> Serialize for StorageIndex<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u64(self.0 as u64)
+    }
+}
 
 #[derive(Serialize)]
 #[serde(transparent)]
@@ -27,6 +40,12 @@ impl<T: Sized + Default + Serialize> Storage<T> {
     pub fn new() -> Self {
         Self {
             items: Vec::new()
+        }
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            items: Vec::with_capacity(capacity)
         }
     }
 
@@ -49,5 +68,15 @@ impl<T: Sized + Default + Serialize> Storage<T> {
 
     pub fn len(&self) -> usize {
         self.items.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+}
+
+impl<T: Sized + Default + Serialize> Default for Storage<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }

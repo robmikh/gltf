@@ -86,9 +86,9 @@ pub fn write_gltf<T: Vertex>(
     }
     if !animations.is_empty() {
         let animations = format!(
-            r#"    "animations" : [
+            r#"    "animations" : 
         {}
-    ]"#,
+    "#,
             animations.write_animations().join(",\n")
         );
         gltf_parts.push(animations);

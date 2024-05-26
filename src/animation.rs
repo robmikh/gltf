@@ -1,25 +1,27 @@
-use crate::enum_with_str;
+use serde::Serialize;
 
-use super::{add_and_get_index, buffer::AccessorIndex, node::NodeIndex, AsStr};
+use crate::{enum_with_str, storage::{Storage, StorageIndex}};
 
-#[derive(Copy, Clone, Debug)]
-pub struct ChannelIndex(pub usize);
-#[derive(Copy, Clone, Debug)]
-pub struct SamplerIndex(pub usize);
-#[derive(Copy, Clone, Debug)]
-pub struct AnimationIndex(pub usize);
+use super::{buffer::AccessorIndex, node::NodeIndex};
 
+pub type ChannelIndex = StorageIndex<Channel>;
+pub type SamplerIndex = StorageIndex<Sampler>;
+pub type AnimationIndex = StorageIndex<Animation>;
+
+#[derive(Default, Serialize)]
 pub struct Animation {
-    channels: Vec<Channel>,
+    channels: Storage<Channel>,
     name: String,
-    samplers: Vec<Sampler>,
+    samplers: Storage<Sampler>,
 }
 
+#[derive(Default, Serialize)]
 pub struct Channel {
     pub sampler: SamplerIndex,
     pub target: ChannelTarget,
 }
 
+#[derive(Default, Serialize)]
 pub struct ChannelTarget {
     pub node: NodeIndex,
     pub path: AnimationTarget,
@@ -31,6 +33,18 @@ enum_with_str!(AnimationTarget {
     Rotation: "rotation",
 });
 
+impl Default for AnimationInterpolation {
+    fn default() -> Self {
+        Self::Linear
+    }
+}
+impl Default for AnimationTarget {
+    fn default() -> Self {
+        Self::Translation
+    }
+}
+
+#[derive(Default, Serialize)]
 pub struct Sampler {
     pub input: AccessorIndex,
     pub interpolation: AnimationInterpolation,
@@ -38,83 +52,40 @@ pub struct Sampler {
 }
 
 pub struct Animations {
-    animations: Vec<Animation>,
+    animations: Storage<Animation>,
 }
 
 impl Animation {
     pub fn new(name: String) -> Self {
         Self {
-            channels: Vec::new(),
+            channels: Storage::new(),
             name,
-            samplers: Vec::new(),
+            samplers: Storage::new(),
         }
     }
 
     pub fn add_sampler(&mut self, sampler: Sampler) -> SamplerIndex {
-        SamplerIndex(add_and_get_index(&mut self.samplers, sampler))
+        self.samplers.allocate_with(sampler)
     }
 
     pub fn add_channel(&mut self, channel: Channel) -> ChannelIndex {
-        ChannelIndex(add_and_get_index(&mut self.channels, channel))
+        self.channels.allocate_with(channel)
     }
 
     pub fn write(&self) -> String {
-        let mut channels = Vec::new();
-        for channel in &self.channels {
-            channels.push(format!(
-                r#"           {{
-                "sampler" : {},
-                "target" : {{
-                    "node" : {},
-                    "path" : "{}"
-                }}
-            }}"#,
-                channel.sampler.0,
-                channel.target.node.0,
-                channel.target.path.as_str()
-            ));
-        }
-        let channels = channels.join(",\n");
-
-        let mut samplers = Vec::new();
-        for sampler in &self.samplers {
-            samplers.push(format!(
-                r#"           {{
-                "input" : {},
-                "interpolation" : "{}",
-                "output" : {}
-            }}"#,
-                sampler.input.0,
-                sampler.interpolation.as_str(),
-                sampler.output.0,
-            ));
-        }
-        let samplers = samplers.join(",\n");
-
-        format!(
-            r#"        {{
-            "channels" : [
-{}
-            ],
-            "name" : "{}",
-            "samplers" : [
-{}
-            ]
-        }}"#,
-            channels, &self.name, samplers
-        )
+        serde_json::to_string_pretty(&self).unwrap()
     }
 }
 
 impl Animations {
     pub fn new(capacity: usize) -> Self {
         Self {
-            animations: Vec::with_capacity(capacity),
+            animations: Storage::with_capacity(capacity),
         }
     }
 
     pub fn add_animation(&mut self, animation: Animation) -> AnimationIndex {
-        AnimationIndex(add_and_get_index(&mut self.animations, animation))
+        self.animations.allocate_with(animation)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -122,10 +93,8 @@ impl Animations {
     }
 
     pub fn write_animations(&self) -> Vec<String> {
-        let mut animations = Vec::new();
-        for animation in &self.animations {
-            animations.push(animation.write());
-        }
-        animations
+        vec![
+            serde_json::to_string_pretty(&self.animations).unwrap()
+        ]
     }
 }

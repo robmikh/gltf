@@ -1,10 +1,11 @@
 use glam::{Vec3, Vec4};
+use serde::Serialize;
 
 use super::{add_and_get_index, skin::SkinIndex};
 
 #[derive(Copy, Clone, Debug)]
 pub struct MeshIndex(pub usize);
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default, Serialize)]
 pub struct NodeIndex(pub usize);
 
 #[derive(Clone, Debug, Default)]
