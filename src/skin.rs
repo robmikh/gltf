@@ -1,52 +1,40 @@
 use serde::Serialize;
 
+use crate::storage::{Storage, StorageIndex};
+
 use super::{add_and_get_index, buffer::AccessorIndex, node::NodeIndex};
 
-#[derive(Copy, Clone, Debug, Serialize)]
-pub struct SkinIndex(pub usize);
+pub type SkinIndex = StorageIndex<Skin>;
 
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Skin {
     pub inverse_bind_matrices: AccessorIndex,
     pub joints: Vec<NodeIndex>,
 }
 
+#[derive(Clone, Default, Serialize)]
+#[serde(transparent)]
 pub struct Skins {
-    skins: Vec<Skin>,
+    skins: Storage<Skin>,
 }
 
 impl Skins {
     pub fn new() -> Self {
-        Self { skins: Vec::new() }
+        Self {
+            skins: Storage::new(),
+        }
     }
 
     pub fn add_skin(&mut self, skin: Skin) -> SkinIndex {
-        let index = add_and_get_index(&mut self.skins, skin);
-        SkinIndex(index)
+        self.skins.allocate_with(skin)
     }
 
     pub fn is_empty(&self) -> bool {
         self.skins.is_empty()
     }
 
-    pub fn write_skins(&self) -> Vec<String> {
-        let mut skins = Vec::new();
-        for skin in &self.skins {
-            let mut joints = Vec::with_capacity(skin.joints.len());
-            for joint in &skin.joints {
-                joints.push(format!("                           {}", joint.0));
-            }
-            let joints = joints.join(",\n");
-
-            skins.push(format!(
-                r#"          {{
-                        "inverseBindMatrices" : {},
-                        "joints" : [
-        {}
-                        ]
-                    }}"#,
-                skin.inverse_bind_matrices.0, joints
-            ));
-        }
-        skins
+    pub fn write_skins(&self) -> String {
+        serde_json::to_string_pretty(&self.skins).unwrap()
     }
 }

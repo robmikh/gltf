@@ -197,7 +197,7 @@ pub fn export<P: AsRef<Path>>(
     let mut bone_to_node: HashMap<usize, NodeIndex> = HashMap::new();
     let mesh_node = nodes.add_node(Node {
         mesh: Some(MeshIndex(0)),
-        skin: Some(SkinIndex(0)),
+        skin: Some(SkinIndex::default()),
         ..Default::default()
     });
     for node_id in bone_tree

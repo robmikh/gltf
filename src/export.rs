@@ -1,3 +1,6 @@
+use serde::Serialize;
+use serde_with::skip_serializing_none;
+
 use crate::animation::Animations;
 
 use super::{
@@ -7,6 +10,18 @@ use super::{
     skin::Skins,
     Model, Vertex,
 };
+
+#[skip_serializing_none]
+#[derive(Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GltfParts {
+    #[serde(skip_serializing_if = "Skins::is_empty")]
+    skins: Skins,
+    #[serde(skip_serializing_if = "Animations::is_empty")]
+    animations: Animations,
+    #[serde(flatten)]
+    material_data: MaterialData,
+}
 
 pub fn write_gltf<T: Vertex>(
     buffer_name: &str,
@@ -61,74 +76,22 @@ pub fn write_gltf<T: Vertex>(
     }
     let primitives = primitives.join(",\n");
 
-    // Write materials, textures, images, and samplers
-    let materials = material_data.write_materials();
-    let textures = material_data.write_textures();
-    let images = material_data.write_images();
-    let samplers = material_data.write_samplers();
-
     // Create buffer views and accessors
     let buffer_views = buffer_writer.write_buffer_views();
-    let gltf_accessors = buffer_writer.write_accessors();
-    let buffer_views = buffer_views.join(",\n");
-    let accessors = gltf_accessors.join(",\n");
+    let accessors = buffer_writer.write_accessors();
 
     // Write GLTF
-    let mut gltf_parts = Vec::new();
-    if !skins.is_empty() {
-        let skins = format!(
-            r#"    "skins" : [
-        {}
-    ]"#,
-            skins.write_skins().join(",\n")
-        );
-        gltf_parts.push(skins);
-    }
-    if !animations.is_empty() {
-        let animations = format!(
-            r#"    "animations" : 
-        {}
-    "#,
-            animations.write_animations().join(",\n")
-        );
-        gltf_parts.push(animations);
-    }
-    if !materials.is_empty() {
-        let materials = format!(
-            r#"    "materials" : 
-{}
-    "#,
-            materials.join(",\n")
-        );
-        gltf_parts.push(materials);
-    }
-    if !textures.is_empty() {
-        let textures = format!(
-            r#"    "textures" : 
-{}
-    "#,
-            textures.join(",\n")
-        );
-        gltf_parts.push(textures);
-    }
-    if !images.is_empty() {
-        let images = format!(
-            r#"    "images" : 
-{}
-    "#,
-            images.join(",\n")
-        );
-        gltf_parts.push(images);
-    }
-    if !samplers.is_empty() {
-        let samplers = format!(
-            r#"    "samplers" : 
-{}
-    "#,
-            samplers.join(",\n")
-        );
-        gltf_parts.push(samplers);
-    }
+    let gltf_parts = GltfParts {
+        skins: skins.clone(),
+        animations: animations.clone(),
+        material_data: material_data.clone(),
+    };
+    let gltf_parts = serde_json::to_string_pretty(&gltf_parts).unwrap();
+    let gltf_parts = {
+        let first = gltf_parts.find('{').unwrap();
+        let last = gltf_parts.rfind('}').unwrap();
+        &gltf_parts[first + 1..last]
+    };
 
     let gltf_text = format!(
         r#"{{
@@ -173,13 +136,13 @@ pub fn write_gltf<T: Vertex>(
         }}
     "#,
         scene_root.0,
-        nodes.write_nodes().join(",\n"),
+        nodes.write_nodes(),
         primitives,
         buffer_name,
         buffer_writer.buffer_len(),
         buffer_views,
         accessors,
-        gltf_parts.join(",\n"),
+        gltf_parts,
     );
 
     gltf_text

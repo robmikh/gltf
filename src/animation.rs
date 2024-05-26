@@ -11,20 +11,20 @@ pub type ChannelIndex = StorageIndex<Channel>;
 pub type SamplerIndex = StorageIndex<Sampler>;
 pub type AnimationIndex = StorageIndex<Animation>;
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct Animation {
     channels: Storage<Channel>,
     name: String,
     samplers: Storage<Sampler>,
 }
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct Channel {
     pub sampler: SamplerIndex,
     pub target: ChannelTarget,
 }
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct ChannelTarget {
     pub node: NodeIndex,
     pub path: AnimationTarget,
@@ -47,13 +47,15 @@ impl Default for AnimationTarget {
     }
 }
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct Sampler {
     pub input: AccessorIndex,
     pub interpolation: AnimationInterpolation,
     pub output: AccessorIndex,
 }
 
+#[derive(Clone, Default, Serialize)]
+#[serde(transparent)]
 pub struct Animations {
     animations: Storage<Animation>,
 }
@@ -95,7 +97,7 @@ impl Animations {
         self.animations.is_empty()
     }
 
-    pub fn write_animations(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.animations).unwrap()]
+    pub fn write_animations(&self) -> String {
+        serde_json::to_string_pretty(&self.animations).unwrap()
     }
 }

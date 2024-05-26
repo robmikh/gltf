@@ -177,12 +177,12 @@ impl BufferWriter {
         BufferViewAndAccessorPair::new(view, accessor)
     }
 
-    pub fn write_buffer_views(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.views).unwrap()]
+    pub fn write_buffer_views(&self) -> String {
+        serde_json::to_string_pretty(&self.views).unwrap()
     }
 
-    pub fn write_accessors(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.accessors).unwrap()]
+    pub fn write_accessors(&self) -> String {
+        serde_json::to_string_pretty(&self.accessors).unwrap()
     }
 
     pub fn buffer_len(&self) -> usize {

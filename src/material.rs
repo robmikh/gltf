@@ -38,13 +38,13 @@ impl BaseColorTexture {
     }
 }
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct Texture {
     pub sampler: SamplerIndex,
     pub source: ImageIndex,
 }
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct Image {
     pub uri: String,
 }
@@ -78,7 +78,7 @@ pub enum Wrap {
     Repeat = 10497,
 }
 
-#[derive(Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sampler {
     pub mag_filter: MagFilter,
@@ -87,10 +87,15 @@ pub struct Sampler {
     pub wrap_t: Wrap,
 }
 
+#[derive(Clone, Default, Serialize)]
 pub struct MaterialData {
+    #[serde(skip_serializing_if = "Storage::is_empty")]
     materials: Storage<Material>,
+    #[serde(skip_serializing_if = "Storage::is_empty")]
     textures: Storage<Texture>,
+    #[serde(skip_serializing_if = "Storage::is_empty")]
     images: Storage<Image>,
+    #[serde(skip_serializing_if = "Storage::is_empty")]
     samplers: Storage<Sampler>,
 }
 
@@ -120,19 +125,19 @@ impl MaterialData {
         self.samplers.allocate_with(sampler)
     }
 
-    pub fn write_materials(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.materials).unwrap()]
+    pub fn write_materials(&self) -> String {
+        serde_json::to_string_pretty(&self.materials).unwrap()
     }
 
-    pub fn write_textures(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.textures).unwrap()]
+    pub fn write_textures(&self) -> String {
+        serde_json::to_string_pretty(&self.textures).unwrap()
     }
 
-    pub fn write_images(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.images).unwrap()]
+    pub fn write_images(&self) -> String {
+        serde_json::to_string_pretty(&self.images).unwrap()
     }
 
-    pub fn write_samplers(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.samplers).unwrap()]
+    pub fn write_samplers(&self) -> String {
+        serde_json::to_string_pretty(&self.samplers).unwrap()
     }
 }

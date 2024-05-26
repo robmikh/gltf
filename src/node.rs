@@ -38,7 +38,7 @@ impl Nodes {
         self.nodes.allocate_with(node)
     }
 
-    pub fn write_nodes(&self) -> Vec<String> {
-        vec![serde_json::to_string_pretty(&self.nodes).unwrap()]
+    pub fn write_nodes(&self) -> String {
+        serde_json::to_string_pretty(&self.nodes).unwrap()
     }
 }
