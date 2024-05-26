@@ -157,13 +157,13 @@ pub fn write_gltf<T: Vertex>(
             }}
           ],
 
-            "bufferViews" : [
+            "bufferViews" : 
                 {}
-            ],
+            ,
 
-            "accessors" : [
+            "accessors" : 
                 {}
-            ],
+            ,
 
 {},
 

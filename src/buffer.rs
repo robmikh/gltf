@@ -1,8 +1,9 @@
 use glam::{Mat4, Vec3, Vec4};
+use serde::{ser::SerializeStruct, Serialize, Serializer};
+use serde_repr::Serialize_repr;
+use serde_with::skip_serializing_none;
 
-use crate::enum_with_str;
-
-use super::{add_and_get_index, AsStr};
+use crate::{enum_with_str, storage::{Storage, StorageIndex}};
 
 pub trait BufferType: Sized {
     const COMPONENT_TY: AccessorComponentType;
@@ -28,6 +29,18 @@ pub struct MinMax<T> {
     pub max: T,
 }
 
+impl Serialize for MinMax<String> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("MinMax", 2)?;
+        s.serialize_field("min", &serde_json::value::RawValue::from_string(self.min.clone()).unwrap())?;
+        s.serialize_field("max", &serde_json::value::RawValue::from_string(self.max.clone()).unwrap())?;
+        s.end()
+    }
+}
+
 impl<T: BufferTypeMinMax> BufferTypeEx for T {
     fn find_min_max(data: &[Self]) -> (Self, Self) {
         let mut max = T::MIN;
@@ -40,12 +53,8 @@ impl<T: BufferTypeMinMax> BufferTypeEx for T {
     }
 }
 
-#[repr(transparent)]
-#[derive(Copy, Clone, Debug)]
-pub struct BufferViewIndex(pub usize);
-#[repr(transparent)]
-#[derive(Copy, Clone, Debug)]
-pub struct AccessorIndex(pub usize);
+pub type BufferViewIndex = StorageIndex<BufferView>;
+pub type AccessorIndex = StorageIndex<Accessor>;
 
 #[derive(Copy, Clone, Debug)]
 pub struct BufferViewAndAccessorPair {
@@ -61,16 +70,16 @@ impl BufferViewAndAccessorPair {
 
 pub struct BufferWriter {
     buffer: Vec<u8>,
-    views: Vec<BufferView>,
-    accessors: Vec<Accessor>,
+    views: Storage<BufferView>,
+    accessors: Storage<Accessor>,
 }
 
 impl BufferWriter {
     pub fn new() -> Self {
         Self {
             buffer: Vec::new(),
-            views: Vec::new(),
-            accessors: Vec::new(),
+            views: Storage::new(),
+            accessors: Storage::new(),
         }
     }
 
@@ -86,8 +95,7 @@ impl BufferWriter {
         }
         let byte_len = self.buffer.len() - offset;
         let stride = T::stride();
-        let view_index = add_and_get_index(
-            &mut self.views,
+        let index = self.views.allocate_with(
             BufferView {
                 buffer: 0,
                 byte_offset: offset,
@@ -96,7 +104,7 @@ impl BufferWriter {
                 target,
             },
         );
-        BufferViewIndex(view_index)
+        index
     }
 
     pub fn create_accessor<T: BufferType + Copy>(
@@ -105,8 +113,7 @@ impl BufferWriter {
         byte_offset: usize,
         len: usize,
     ) -> AccessorIndex {
-        AccessorIndex(add_and_get_index(
-            &mut self.accessors,
+        self.accessors.allocate_with(
             Accessor {
                 buffer_view: view_index.0,
                 byte_offset,
@@ -115,7 +122,7 @@ impl BufferWriter {
                 ty: T::TY,
                 min_max: None,
             },
-        ))
+        )
     }
 
     pub fn create_accessor_with_min_max<T: BufferTypeMinMax + Copy>(
@@ -125,8 +132,7 @@ impl BufferWriter {
         len: usize,
         min_max: MinMax<T>,
     ) -> AccessorIndex {
-        AccessorIndex(add_and_get_index(
-            &mut self.accessors,
+        self.accessors.allocate_with(
             Accessor {
                 buffer_view: view_index.0,
                 byte_offset,
@@ -137,8 +143,8 @@ impl BufferWriter {
                     min: min_max.min.write_value(),
                     max: min_max.max.write_value(),
                 }),
-            },
-        ))
+            }
+        )
     }
 
     pub fn create_view_and_accessor<T: BufferType + Copy>(
@@ -169,72 +175,15 @@ impl BufferWriter {
     }
 
     pub fn write_buffer_views(&self) -> Vec<String> {
-        let mut views = Vec::with_capacity(self.views.len());
-        for view in &self.views {
-            let extras = {
-                let mut extras = Vec::with_capacity(2);
-                if let Some(stride) = view.stride {
-                    extras.push(format!(r#""byteStride" : {}"#, stride));
-                }
-                if let Some(target) = view.target {
-                    extras.push(format!(r#""target" : {}"#, target as usize));
-                }
-                if extras.is_empty() {
-                    "".to_owned()
-                } else {
-                    let extras = extras.join(",\n");
-                    format!(",\n{}", extras)
-                }
-            };
-            views.push(format!(
-                r#"        {{
-            "buffer" : {},
-            "byteOffset" : {},
-            "byteLength" : {}{}
-        }}"#,
-                view.buffer, view.byte_offset, view.byte_len, extras
-            ));
-        }
-        views
+        vec![
+            serde_json::to_string_pretty(&self.views).unwrap()
+        ]
     }
 
     pub fn write_accessors(&self) -> Vec<String> {
-        let mut accessors = Vec::with_capacity(self.accessors.len());
-        for accessor in &self.accessors {
-            let extras = {
-                let mut extras = Vec::with_capacity(1);
-                if let Some(min_max) = accessor.min_max.as_ref() {
-                    extras.push(format!(
-                        r#"                    "max" : {},
-                    "min" : {}"#,
-                        min_max.max, min_max.min
-                    ));
-                }
-                if extras.is_empty() {
-                    "".to_owned()
-                } else {
-                    let extras = extras.join(",\n");
-                    format!(",\n{}", extras)
-                }
-            };
-
-            accessors.push(format!(
-                r#"                {{
-                    "bufferView" : {},
-                    "byteOffset" : {},
-                    "componentType" : {},
-                    "count" : {},
-                    "type" : "{}"{}
-                }}"#,
-                accessor.buffer_view,
-                accessor.byte_offset,
-                accessor.component_ty as usize,
-                accessor.count,
-                accessor.ty.as_str(),
-                extras
-            ))
-        }
-        accessors
+        vec![
+            serde_json::to_string_pretty(&self.accessors).unwrap()
+        ]
     }
 
     pub fn buffer_len(&self) -> usize {
@@ -246,28 +195,37 @@ impl BufferWriter {
     }
 }
 
-struct BufferView {
+#[skip_serializing_none]
+#[derive(Default, Serialize)]
+pub struct BufferView {
     buffer: usize,
+    #[serde(rename = "byteOffset")]
     byte_offset: usize,
+    #[serde(rename = "byteLength")]
     byte_len: usize,
+    #[serde(rename = "byteStride")]
     stride: Option<usize>,
+    #[serde(rename = "target")]
     target: Option<BufferViewTarget>,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize_repr)]
+#[repr(usize)]
 pub enum BufferViewTarget {
     ArrayBuffer = 34962,
     ElementArrayBuffer = 34963,
 }
 
 // https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#accessor-data-types
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default, Serialize_repr)]
+#[repr(usize)]
 pub enum AccessorComponentType {
     SignedByte = 5120,
     UnsignedByte = 5121,
     SignedShort = 5122,
     UnsignedShort = 5123,
     UnsignedInt = 5125,
+    #[default]
     Float = 5126,
 }
 
@@ -281,12 +239,25 @@ enum_with_str!(AccessorDataType {
     Mat4: "MAT4",
 });
 
-struct Accessor {
+impl Default for AccessorDataType {
+    fn default() -> Self {
+        Self::Scalar
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Default, Serialize)]
+pub struct Accessor {
+    #[serde(rename = "bufferView")]
     buffer_view: usize,
+    #[serde(rename = "byteOffset")]
     byte_offset: usize,
     count: usize,
+    #[serde(rename = "componentType")]
     component_ty: AccessorComponentType,
+    #[serde(rename = "type")]
     ty: AccessorDataType,
+    #[serde(flatten)]
     min_max: Option<MinMax<String>>,
 }
 
