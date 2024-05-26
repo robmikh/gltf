@@ -1,0 +1,15 @@
+[package]
+name = "gltf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "=1.0.203", features = [ "derive" ] }
+serde_json = "1.0.117"
+base64 = "=0.22.1"
+glam = "=0.27.0"
+
+[dev-dependencies]
+gsparser = { git = "https://github.com/robmikh/goldsrc-asset-viewer" }
+id_tree = "1.8.0"
+image = "0.25.1"
