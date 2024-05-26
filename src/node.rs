@@ -1,80 +1,46 @@
 use glam::{Vec3, Vec4};
 use serde::Serialize;
+use serde_with::skip_serializing_none;
 
-use super::{add_and_get_index, skin::SkinIndex};
+use crate::storage::{Storage, StorageIndex};
 
-#[derive(Copy, Clone, Debug)]
+use super::skin::SkinIndex;
+
+#[derive(Copy, Clone, Debug, Serialize)]
 pub struct MeshIndex(pub usize);
-#[derive(Copy, Clone, Debug, Default, Serialize)]
-pub struct NodeIndex(pub usize);
+pub type NodeIndex = StorageIndex<Node>;
 
-#[derive(Clone, Debug, Default)]
+#[skip_serializing_none]
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Node {
     pub mesh: Option<MeshIndex>,
     pub skin: Option<SkinIndex>,
     pub name: Option<String>,
     pub translation: Option<Vec3>,
     pub rotation: Option<Vec4>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<NodeIndex>,
 }
 
 pub struct Nodes {
-    nodes: Vec<Node>,
+    nodes: Storage<Node>,
 }
 
 impl Nodes {
     pub fn new(capacity: usize) -> Self {
         Self {
-            nodes: Vec::with_capacity(capacity),
+            nodes: Storage::with_capacity(capacity),
         }
     }
 
     pub fn add_node(&mut self, node: Node) -> NodeIndex {
-        let index = add_and_get_index(&mut self.nodes, node);
-        NodeIndex(index)
+        self.nodes.allocate_with(node)
     }
 
     pub fn write_nodes(&self) -> Vec<String> {
-        let mut nodes = Vec::with_capacity(self.nodes.len());
-        for node in &self.nodes {
-            let mut fields = Vec::new();
-            if let Some(mesh) = node.mesh {
-                fields.push(format!(r#"            "mesh" : {}"#, mesh.0));
-            }
-            if let Some(skin) = node.skin {
-                fields.push(format!(r#"            "skin" : {}"#, skin.0));
-            }
-            if let Some(name) = node.name.as_ref() {
-                fields.push(format!(r#"            "name" : "{}""#, name));
-            }
-            if let Some(translation) = node.translation {
-                fields.push(format!(
-                    r#"            "translation" : [ {}, {}, {} ]"#,
-                    translation.x, translation.y, translation.z
-                ));
-            }
-            if let Some(rotation) = node.rotation {
-                fields.push(format!(
-                    r#"            "rotation" : [ {}, {}, {}, {} ]"#,
-                    rotation.x, rotation.y, rotation.z, rotation.w
-                ));
-            }
-            if !node.children.is_empty() {
-                let mut children = Vec::new();
-                for child in &node.children {
-                    children.push(child.0.to_string());
-                }
-                let children = children.join(", ");
-                fields.push(format!(r#"            "children" : [ {} ]"#, children));
-            }
-            let fields = fields.join(",\n");
-            nodes.push(format!(
-                r#"        {{
-{}
-        }}"#,
-                fields
-            ));
-        }
-        nodes
+        vec![
+            serde_json::to_string_pretty(&self.nodes).unwrap()
+        ]
     }
 }

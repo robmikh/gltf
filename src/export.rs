@@ -138,9 +138,9 @@ pub fn write_gltf<T: Vertex>(
                 "nodes" : [ {} ]
             }}
         ],
-        "nodes" : [
+        "nodes" : 
 {}
-        ],
+        ,
         
         "meshes" : [
             {{

@@ -264,7 +264,7 @@ pub fn export<P: AsRef<Path>>(
                 AnimationTarget::Translation,
                 &translate_animations,
                 &bone_animation.channels,
-                target_node.0,
+                target_node,
                 gs_animation.fps,
             ) {
                 should_add = true;
@@ -276,7 +276,7 @@ pub fn export<P: AsRef<Path>>(
                 AnimationTarget::Rotation,
                 &rotation_animations,
                 &bone_animation.channels,
-                target_node.0,
+                target_node,
                 gs_animation.fps,
             ) {
                 should_add = true;
@@ -527,7 +527,7 @@ fn process_animation(
     target: AnimationTarget,
     animations: &[(VectorChannel, usize)],
     channels: &[BoneChannelAnimation],
-    target_node: usize,
+    target_node: NodeIndex,
     fps: f32,
 ) -> bool {
     if !animations.is_empty() {
@@ -584,7 +584,7 @@ fn process_animation(
         animation.add_channel(Channel {
             sampler,
             target: ChannelTarget {
-                node: NodeIndex(target_node),
+                node: target_node,
                 path: target,
             },
         });

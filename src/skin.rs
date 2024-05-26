@@ -1,6 +1,8 @@
+use serde::Serialize;
+
 use super::{add_and_get_index, buffer::AccessorIndex, node::NodeIndex};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Serialize)]
 pub struct SkinIndex(pub usize);
 
 pub struct Skin {
