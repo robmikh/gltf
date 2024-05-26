@@ -9,7 +9,7 @@ serde_repr = "0.1.19"
 serde_json = { version = "1.0.117", features = ["raw_value"] }
 serde_with = { version = "=3.8.1", features = ["macros"] }
 base64 = "=0.22.1"
-glam = "=0.27.0"
+glam = { version = "=0.27.0", features = [ "serde" ] }
 
 [dev-dependencies]
 gsparser = { git = "https://github.com/robmikh/goldsrc-asset-viewer" }

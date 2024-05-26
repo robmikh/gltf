@@ -20,18 +20,10 @@ use util::
     coordinates::{convert_coordinates, write_and_convert_channel};
 
 use gltf::{
-    buffer::{BufferViewAndAccessorPair, BufferViewTarget, BufferWriter},
-    node::{MeshIndex, Node, NodeIndex, Nodes},
-    skin::{Skin, SkinIndex, Skins},
-    transform::ComponentTransform,
-    Mesh, Model, Vertex, VertexAttributesSource,
     animation::{
         Animation, AnimationInterpolation, AnimationTarget, Animations, Channel, ChannelTarget,
         Sampler,
-    },
-    export::write_gltf,
-    material::{Image, MagFilter, Material, MaterialData, MinFilter, Texture, Wrap},
-    transform::quat_from_euler,
+    }, buffer::{BufferViewAndAccessorPair, BufferViewTarget, BufferWriter}, export::write_gltf, material::{BaseColorTexture, Image, MagFilter, Material, MaterialData, MinFilter, PbrMetallicRoughness, Texture, Wrap}, node::{MeshIndex, Node, NodeIndex, Nodes}, skin::{Skin, SkinIndex, Skins}, transform::{quat_from_euler, ComponentTransform}, Mesh, Model, Vertex, VertexAttributesSource
 };
 
 struct SkinnedVertex {
@@ -391,10 +383,12 @@ pub fn export<P: AsRef<Path>>(
             source: image,
         });
         material_data.add_material(Material {
-            base_color_texture: Some(texture),
-            metallic_factor: 0.0,
-            roughness_factor: 1.0,
-            ..Default::default()
+            pbr_metallic_roughness: PbrMetallicRoughness {
+                base_color_texture: Some(BaseColorTexture::new(texture)),
+                metallic_factor: 0.0,
+                roughness_factor: 1.0,
+                ..Default::default()
+            }
         });
     }
 

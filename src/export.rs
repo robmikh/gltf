@@ -95,36 +95,36 @@ pub fn write_gltf<T: Vertex>(
     }
     if !materials.is_empty() {
         let materials = format!(
-            r#"    "materials" : [
+            r#"    "materials" : 
 {}
-    ]"#,
+    "#,
             materials.join(",\n")
         );
         gltf_parts.push(materials);
     }
     if !textures.is_empty() {
         let textures = format!(
-            r#"    "textures" : [
+            r#"    "textures" : 
 {}
-    ]"#,
+    "#,
             textures.join(",\n")
         );
         gltf_parts.push(textures);
     }
     if !images.is_empty() {
         let images = format!(
-            r#"    "images" : [
+            r#"    "images" : 
 {}
-    ]"#,
+    "#,
             images.join(",\n")
         );
         gltf_parts.push(images);
     }
     if !samplers.is_empty() {
         let samplers = format!(
-            r#"    "samplers" : [
+            r#"    "samplers" : 
 {}
-    ]"#,
+    "#,
             samplers.join(",\n")
         );
         gltf_parts.push(samplers);
