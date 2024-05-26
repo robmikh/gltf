@@ -124,20 +124,4 @@ impl MaterialData {
     pub fn add_sampler(&mut self, sampler: Sampler) -> SamplerIndex {
         self.samplers.allocate_with(sampler)
     }
-
-    pub fn write_materials(&self) -> String {
-        serde_json::to_string_pretty(&self.materials).unwrap()
-    }
-
-    pub fn write_textures(&self) -> String {
-        serde_json::to_string_pretty(&self.textures).unwrap()
-    }
-
-    pub fn write_images(&self) -> String {
-        serde_json::to_string_pretty(&self.images).unwrap()
-    }
-
-    pub fn write_samplers(&self) -> String {
-        serde_json::to_string_pretty(&self.samplers).unwrap()
-    }
 }

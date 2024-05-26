@@ -76,10 +76,6 @@ impl Animation {
     pub fn add_channel(&mut self, channel: Channel) -> ChannelIndex {
         self.channels.allocate_with(channel)
     }
-
-    pub fn write(&self) -> String {
-        serde_json::to_string_pretty(&self).unwrap()
-    }
 }
 
 impl Animations {

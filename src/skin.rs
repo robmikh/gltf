@@ -33,8 +33,4 @@ impl Skins {
     pub fn is_empty(&self) -> bool {
         self.skins.is_empty()
     }
-
-    pub fn write_skins(&self) -> String {
-        serde_json::to_string_pretty(&self.skins).unwrap()
-    }
 }
