@@ -54,7 +54,7 @@ macro_rules! vertex_def {
         #[derive(Copy, Clone, Debug)]
         pub struct $name {
             $(
-                $field_name : $field_ty,
+                pub $field_name : $field_ty,
             )*
         }
 
