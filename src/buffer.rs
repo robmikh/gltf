@@ -198,6 +198,10 @@ impl BufferWriter {
     pub fn to_inner(self) -> Vec<u8> {
         self.buffer
     }
+
+    pub fn data(&self) -> &[u8] {
+        &self.buffer
+    }
 }
 
 #[skip_serializing_none]

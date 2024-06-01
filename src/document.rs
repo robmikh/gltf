@@ -1,5 +1,6 @@
 use serde::Serialize;
 use serde_with::skip_serializing_none;
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use crate::{
     animation::Animations,
@@ -25,6 +26,12 @@ struct Buffer {
 #[serde(rename_all = "camelCase")]
 struct Scene {
     nodes: Vec<NodeIndex>,
+}
+
+// TODO: Move
+pub enum BufferSource<'a> {
+    Uri(&'a str),
+    Base64,
 }
 
 #[skip_serializing_none]
@@ -58,7 +65,7 @@ pub struct GltfDocument<'a> {
 
 impl<'a> GltfDocument<'a> {
     pub fn new(
-        buffer_uri: &str,
+        buffer_source: BufferSource<'a>,
         buffer_writer: &'a BufferWriter,
         meshes: Vec<Mesh>,
         material_data: &'a MaterialData,
@@ -67,6 +74,13 @@ impl<'a> GltfDocument<'a> {
         skins: &'a Skins,
         animations: &'a Animations,
     ) -> Self {
+        let buffer_uri = match buffer_source {
+            BufferSource::Uri(uri) => uri.to_owned(),
+            BufferSource::Base64 => {
+                format!("data:application/octet-stream;base64,{}", STANDARD.encode(buffer_writer.data()))
+            },
+        };
+
         Self {
             scene: 0,
             scenes: vec![Scene {
@@ -75,7 +89,7 @@ impl<'a> GltfDocument<'a> {
             nodes,
             meshes,
             buffers: vec![Buffer {
-                uri: buffer_uri.to_owned(),
+                uri: buffer_uri,
                 byte_length: buffer_writer.buffer_len(),
             }],
             buffer_writer,

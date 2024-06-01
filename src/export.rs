@@ -1,4 +1,4 @@
-use crate::{animation::Animations, document::GltfDocument, mesh::Mesh};
+use crate::{animation::Animations, document::{BufferSource, GltfDocument}, mesh::Mesh};
 
 use super::{
     buffer::BufferWriter,
@@ -9,7 +9,7 @@ use super::{
 };
 
 pub fn write_gltf<T: Vertex>(
-    buffer_name: &str,
+    buffer_source: BufferSource,
     buffer_writer: &mut BufferWriter,
     model: &Model<T>,
     material_data: &MaterialData,
@@ -21,7 +21,7 @@ pub fn write_gltf<T: Vertex>(
     let mesh = Mesh::new(model, buffer_writer);
 
     let document = GltfDocument::new(
-        buffer_name,
+        buffer_source,
         &buffer_writer,
         vec![mesh],
         material_data,
