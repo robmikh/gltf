@@ -1,4 +1,8 @@
-use crate::{animation::Animations, document::{BufferSource, GltfDocument}, mesh::Mesh};
+use crate::{
+    animation::Animations,
+    document::{BufferSource, GltfDocument},
+    mesh::Mesh,
+};
 
 use super::{
     buffer::BufferWriter,

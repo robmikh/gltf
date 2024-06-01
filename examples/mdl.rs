@@ -361,10 +361,9 @@ pub fn export<P: AsRef<Path>>(
     //       instead of hard coding this.
     assert_eq!(skin_index.0, 0);
 
-    //let buffer_name = "data.bin";
+    let buffer_name = "data.bin";
     let gltf_text = write_gltf(
-        //gltf::document::BufferSource::Uri(buffer_name),
-        gltf::document::BufferSource::Base64,
+        gltf::document::BufferSource::Uri(buffer_name),
         &mut buffer_writer,
         &converted_model,
         &material_data,
@@ -375,16 +374,16 @@ pub fn export<P: AsRef<Path>>(
     );
 
     let path = output_path.as_ref();
-    //let data_path = if let Some(parent_path) = path.parent() {
-    //    let mut data_path = parent_path.to_owned();
-    //    data_path.push(buffer_name);
-    //    data_path
-    //} else {
-    //    PathBuf::from(buffer_name)
-    //};
+    let data_path = if let Some(parent_path) = path.parent() {
+        let mut data_path = parent_path.to_owned();
+        data_path.push(buffer_name);
+        data_path
+    } else {
+        PathBuf::from(buffer_name)
+    };
 
     std::fs::write(path, gltf_text)?;
-    //std::fs::write(data_path, buffer_writer.to_inner())?;
+    std::fs::write(data_path, buffer_writer.to_inner())?;
 
     // Write textures
     let mut texture_path = if let Some(parent_path) = path.parent() {

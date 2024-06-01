@@ -1,6 +1,6 @@
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
-use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 use crate::{
     animation::Animations,
@@ -77,8 +77,11 @@ impl<'a> GltfDocument<'a> {
         let buffer_uri = match buffer_source {
             BufferSource::Uri(uri) => uri.to_owned(),
             BufferSource::Base64 => {
-                format!("data:application/octet-stream;base64,{}", STANDARD.encode(buffer_writer.data()))
-            },
+                format!(
+                    "data:application/octet-stream;base64,{}",
+                    STANDARD.encode(buffer_writer.data())
+                )
+            }
         };
 
         Self {
