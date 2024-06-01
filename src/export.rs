@@ -1,12 +1,10 @@
-use std::collections::HashMap;
-
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 
-use crate::{animation::Animations, material::MaterialIndex, mesh::Primitive};
+use crate::{animation::Animations, mesh::Mesh};
 
 use super::{
-    buffer::{BufferTypeEx, BufferViewTarget, BufferWriter, MinMax},
+    buffer::BufferWriter,
     material::MaterialData,
     node::{NodeIndex, Nodes},
     skin::Skins,
@@ -35,44 +33,7 @@ pub fn write_gltf<T: Vertex>(
     skins: &Skins,
     animations: &Animations,
 ) -> String {
-    // Write our vertex and index data
-    let indices_view =
-        buffer_writer.create_view(&model.indices, Some(BufferViewTarget::ElementArrayBuffer));
-    let vertex_attributes = T::write_slices(buffer_writer, &model.vertices);
-
-    let mut mesh_primitives = Vec::new();
-    for mesh in &model.meshes {
-        let indices = &model.indices[mesh.indices_range.start..mesh.indices_range.end];
-        let (min, max) = u32::find_min_max(indices);
-        let indices_accessor = buffer_writer.create_accessor_with_min_max(
-            indices_view,
-            mesh.indices_range.start * std::mem::size_of::<u32>(),
-            mesh.indices_range.end - mesh.indices_range.start,
-            MinMax { min, max },
-        );
-        mesh_primitives.push((indices_accessor, mesh.texture_index));
-    }
-
-    // Create primitives
-    let attributes = {
-        let attribute_pairs = vertex_attributes.attribute_pairs();
-        let mut attributes = HashMap::new();
-        for (name, value) in attribute_pairs {
-            attributes.insert(name, value);
-        }
-        attributes
-    };
-    let mut primitives = Vec::with_capacity(model.meshes.len());
-    for (indices, material) in mesh_primitives {
-        let mut material_index = MaterialIndex::default();
-        material_index.0 = material;
-        primitives.push(Primitive {
-            attributes: attributes.clone(),
-            indices,
-            material: material_index,
-        });
-    }
-    let primitives = serde_json::to_string_pretty(&primitives).unwrap();
+    let mesh = Mesh::new(model, buffer_writer);
 
     // Create buffer views and accessors
     let buffer_views = buffer_writer.write_buffer_views();
@@ -104,10 +65,7 @@ pub fn write_gltf<T: Vertex>(
         ,
         
         "meshes" : [
-            {{
-            "primitives" : 
 {}
-            }}
         ],
 
           "buffers" : [
@@ -134,7 +92,7 @@ pub fn write_gltf<T: Vertex>(
     "#,
         scene_root.0,
         nodes.write_nodes(),
-        primitives,
+        serde_json::to_string_pretty(&mesh).unwrap(),
         buffer_name,
         buffer_writer.buffer_len(),
         buffer_views,
