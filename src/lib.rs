@@ -50,6 +50,7 @@ macro_rules! enum_with_str {
 #[macro_export]
 macro_rules! vertex_def {
     ($name:ident { $(($attribute_name:literal) $field_name:ident : $field_ty:ty),* $(,)* }) => {
+        #[repr(C)]
         #[derive(Copy, Clone, Debug)]
         pub struct $name {
             $(
