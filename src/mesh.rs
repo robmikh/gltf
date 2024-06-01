@@ -47,9 +47,8 @@ impl Mesh {
 
         // Create primitives
         let attributes = {
-            let attribute_pairs = vertex_attributes.attribute_pairs();
             let mut attributes = HashMap::new();
-            for (name, value) in attribute_pairs {
+            for (name, value) in vertex_attributes {
                 attributes.insert(name, value);
             }
             attributes

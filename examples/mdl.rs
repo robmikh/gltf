@@ -23,7 +23,7 @@ use gltf::{
         Animation, AnimationInterpolation, AnimationTarget, Animations, Channel, ChannelTarget,
         Sampler,
     },
-    buffer::{BufferViewAndAccessorPair, BufferViewTarget, BufferWriter},
+    buffer::BufferWriter,
     export::write_gltf,
     material::{
         BaseColorTexture, Image, MagFilter, Material, MaterialData, MinFilter,
@@ -32,74 +32,16 @@ use gltf::{
     node::{MeshIndex, Node, NodeIndex, Nodes},
     skin::{Skin, SkinIndex, Skins},
     transform::{quat_from_euler, ComponentTransform},
-    Mesh, Model, Vertex, VertexAttributesSource,
+    vertex_def, Mesh, Model,
 };
 
-struct SkinnedVertex {
-    pos: [f32; 3],
-    normal: [f32; 3],
-    uv: [f32; 2],
-    joints: [u8; 4],
-    weights: [f32; 4],
-}
-
-impl Vertex for SkinnedVertex {
-    fn write_slices(
-        writer: &mut BufferWriter,
-        vertices: &[Self],
-    ) -> Box<dyn VertexAttributesSource> {
-        // Split out the vertex data
-        let mut positions = Vec::with_capacity(vertices.len());
-        let mut normals = Vec::with_capacity(vertices.len());
-        let mut uvs = Vec::with_capacity(vertices.len());
-        let mut joints = Vec::with_capacity(vertices.len());
-        let mut weights = Vec::with_capacity(vertices.len());
-        for vertex in vertices {
-            positions.push(vertex.pos);
-            normals.push(vertex.normal);
-            uvs.push(vertex.uv);
-            joints.push(vertex.joints);
-            weights.push(vertex.weights);
-        }
-
-        let vertex_positions_pair = writer
-            .create_view_and_accessor_with_min_max(&positions, Some(BufferViewTarget::ArrayBuffer));
-        let vertex_normals_pair = writer
-            .create_view_and_accessor_with_min_max(&normals, Some(BufferViewTarget::ArrayBuffer));
-        let vertex_uvs_pair =
-            writer.create_view_and_accessor_with_min_max(&uvs, Some(BufferViewTarget::ArrayBuffer));
-        let vertex_joints_pair = writer
-            .create_view_and_accessor_with_min_max(&joints, Some(BufferViewTarget::ArrayBuffer));
-        let vertex_weights_pair = writer
-            .create_view_and_accessor_with_min_max(&weights, Some(BufferViewTarget::ArrayBuffer));
-
-        Box::new(SkinnedVertexAttributes {
-            positions: vertex_positions_pair,
-            normals: vertex_normals_pair,
-            uvs: vertex_uvs_pair,
-            joints: vertex_joints_pair,
-            weights: vertex_weights_pair,
-        })
-    }
-}
-
-struct SkinnedVertexAttributes {
-    positions: BufferViewAndAccessorPair,
-    normals: BufferViewAndAccessorPair,
-    uvs: BufferViewAndAccessorPair,
-    joints: BufferViewAndAccessorPair,
-    weights: BufferViewAndAccessorPair,
-}
-
-impl VertexAttributesSource for SkinnedVertexAttributes {
-    fn attribute_pairs(&self) -> Vec<(&'static str, usize)> {
-        vec![
-            ("POSITION", self.positions.accessor.0),
-            ("NORMAL", self.normals.accessor.0),
-            ("TEXCOORD_0", self.uvs.accessor.0),
-            ("JOINTS_0", self.joints.accessor.0),
-            ("WEIGHTS_0", self.weights.accessor.0),
-        ]
+vertex_def! {
+    SkinnedVertex {
+        ("POSITION") pos: [f32; 3],
+        ("NORMAL") normal: [f32; 3],
+        ("TEXCOORD_0") uv: [f32; 2],
+        ("JOINTS_0") joints: [u8; 4],
+        ("WEIGHTS_0") weights: [f32; 4],
     }
 }
 

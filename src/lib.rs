@@ -12,15 +12,8 @@ pub mod skin;
 pub mod storage;
 pub mod transform;
 
-pub trait VertexAttributesSource {
-    fn attribute_pairs(&self) -> Vec<(&'static str, usize)>;
-}
-
 pub trait Vertex: Sized {
-    fn write_slices(
-        writer: &mut BufferWriter,
-        vertices: &[Self],
-    ) -> Box<dyn VertexAttributesSource>;
+    fn write_slices(writer: &mut BufferWriter, vertices: &[Self]) -> Vec<(&'static str, usize)>;
 }
 
 #[derive(Clone)]
@@ -50,6 +43,47 @@ macro_rules! enum_with_str {
                 #[serde(rename = $str_value)]
                 $var_name,
             )*
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! vertex_def {
+    ($name:ident { $(($attribute_name:literal) $field_name:ident : $field_ty:ty),* $(,)* }) => {
+        #[derive(Copy, Clone, Debug)]
+        pub struct $name {
+            $(
+                $field_name : $field_ty,
+            )*
+        }
+
+        impl gltf::Vertex for $name {
+            fn write_slices(
+                writer: &mut gltf::buffer::BufferWriter,
+                vertices: &[Self]
+            ) -> Vec<(&'static str, usize)> {
+                // Split out the vertex data
+                $(
+                    let mut $field_name = Vec::with_capacity(vertices.len());
+                )*
+                for vertex in vertices {
+                    $(
+                        $field_name.push(vertex.$field_name);
+                    )*
+                }
+
+                $(
+                    let $field_name = writer.create_view_and_accessor_with_min_max(&$field_name, Some(gltf::buffer::BufferViewTarget::ArrayBuffer));
+                )*
+
+                let attributes = vec![
+                    $(
+                        ($attribute_name, $field_name.accessor.0),
+                    )*
+                ];
+
+                attributes
+            }
         }
     };
 }
