@@ -1,6 +1,3 @@
-use serde::Serialize;
-use serde_with::skip_serializing_none;
-
 use crate::{animation::Animations, document::GltfDocument, mesh::Mesh};
 
 use super::{
@@ -10,18 +7,6 @@ use super::{
     skin::Skins,
     Model, Vertex,
 };
-
-#[skip_serializing_none]
-#[derive(Default, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct GltfParts {
-    #[serde(skip_serializing_if = "Skins::is_empty")]
-    skins: Skins,
-    #[serde(skip_serializing_if = "Animations::is_empty")]
-    animations: Animations,
-    #[serde(flatten)]
-    material_data: MaterialData,
-}
 
 pub fn write_gltf<T: Vertex>(
     buffer_name: &str,
