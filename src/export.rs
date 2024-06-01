@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 
-use crate::animation::Animations;
+use crate::{animation::Animations, material::MaterialIndex, mesh::Primitive};
 
 use super::{
     buffer::{BufferTypeEx, BufferViewTarget, BufferWriter, MinMax},
@@ -50,31 +52,27 @@ pub fn write_gltf<T: Vertex>(
         );
         mesh_primitives.push((indices_accessor, mesh.texture_index));
     }
-    let vertex_attribute_str = {
-        let attribute_pairs = vertex_attributes.attribute_pairs();
-        let mut attributes = Vec::with_capacity(attribute_pairs.len());
-        for (name, accessor) in attribute_pairs {
-            attributes.push(format!(r#"            "{}" : {}"#, name, accessor));
-        }
-        let attributes = attributes.join(",\n");
-        attributes
-    };
 
     // Create primitives
+    let attributes = {
+        let attribute_pairs = vertex_attributes.attribute_pairs();
+        let mut attributes = HashMap::new();
+        for (name, value) in attribute_pairs {
+            attributes.insert(name, value);
+        }
+        attributes
+    };
     let mut primitives = Vec::with_capacity(model.meshes.len());
     for (indices, material) in mesh_primitives {
-        primitives.push(format!(
-            r#"         {{
-            "attributes" : {{
-{}
-            }},
-            "indices" : {},
-            "material" : {}
-        }}"#,
-            vertex_attribute_str, indices.0, material
-        ));
+        let mut material_index = MaterialIndex::default();
+        material_index.0 = material;
+        primitives.push(Primitive {
+            attributes: attributes.clone(),
+            indices,
+            material: material_index,
+        });
     }
-    let primitives = primitives.join(",\n");
+    let primitives = serde_json::to_string_pretty(&primitives).unwrap();
 
     // Create buffer views and accessors
     let buffer_views = buffer_writer.write_buffer_views();
@@ -107,9 +105,8 @@ pub fn write_gltf<T: Vertex>(
         
         "meshes" : [
             {{
-            "primitives" : [ 
+            "primitives" : 
 {}
-             ]
             }}
         ],
 
