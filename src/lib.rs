@@ -3,6 +3,7 @@ use std::ops::Range;
 
 pub mod animation;
 pub mod buffer;
+pub mod document;
 pub mod export;
 pub mod material;
 pub mod mesh;

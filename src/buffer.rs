@@ -27,6 +27,7 @@ pub trait BufferTypeEx: Sized {
     fn find_min_max(data: &[Self]) -> (Self, Self);
 }
 
+#[derive(Debug)]
 pub struct MinMax<T> {
     pub min: T,
     pub max: T,
@@ -77,8 +78,13 @@ impl BufferViewAndAccessorPair {
     }
 }
 
+#[skip_serializing_none]
+#[derive(Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BufferWriter {
+    #[serde(skip)]
     buffer: Vec<u8>,
+    #[serde(rename = "bufferViews")]
     views: Storage<BufferView>,
     accessors: Storage<Accessor>,
 }
@@ -195,7 +201,7 @@ impl BufferWriter {
 }
 
 #[skip_serializing_none]
-#[derive(Default, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct BufferView {
     buffer: usize,
     #[serde(rename = "byteOffset")]
@@ -245,7 +251,7 @@ impl Default for AccessorDataType {
 }
 
 #[skip_serializing_none]
-#[derive(Default, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct Accessor {
     #[serde(rename = "bufferView")]
     buffer_view: usize,

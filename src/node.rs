@@ -23,6 +23,8 @@ pub struct Node {
     pub children: Vec<NodeIndex>,
 }
 
+#[derive(Clone, Default, Serialize)]
+#[serde(transparent)]
 pub struct Nodes {
     nodes: Storage<Node>,
 }
@@ -40,5 +42,9 @@ impl Nodes {
 
     pub fn write_nodes(&self) -> String {
         serde_json::to_string_pretty(&self.nodes).unwrap()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.nodes.is_empty()
     }
 }

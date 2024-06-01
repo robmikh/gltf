@@ -33,7 +33,7 @@ impl<T: Sized + Default + Serialize> Serialize for StorageIndex<T> {
     }
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(transparent)]
 pub struct Storage<T: Sized + Default + Serialize> {
     items: Vec<T>,

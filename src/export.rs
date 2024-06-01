@@ -1,7 +1,7 @@
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 
-use crate::{animation::Animations, mesh::Mesh};
+use crate::{animation::Animations, document::GltfDocument, mesh::Mesh};
 
 use super::{
     buffer::BufferWriter,
@@ -35,70 +35,16 @@ pub fn write_gltf<T: Vertex>(
 ) -> String {
     let mesh = Mesh::new(model, buffer_writer);
 
-    // Create buffer views and accessors
-    let buffer_views = buffer_writer.write_buffer_views();
-    let accessors = buffer_writer.write_accessors();
-
-    // Write GLTF
-    let gltf_parts = GltfParts {
-        skins: skins.clone(),
-        animations: animations.clone(),
-        material_data: material_data.clone(),
-    };
-    let gltf_parts = serde_json::to_string_pretty(&gltf_parts).unwrap();
-    let gltf_parts = {
-        let first = gltf_parts.find('{').unwrap();
-        let last = gltf_parts.rfind('}').unwrap();
-        &gltf_parts[first + 1..last]
-    };
-
-    let gltf_text = format!(
-        r#"{{
-        "scene" : 0,
-        "scenes" : [
-            {{
-                "nodes" : [ {} ]
-            }}
-        ],
-        "nodes" : 
-{}
-        ,
-        
-        "meshes" : [
-{}
-        ],
-
-          "buffers" : [
-            {{
-                "uri" : "{}",
-                "byteLength" : {}
-            }}
-          ],
-
-            "bufferViews" : 
-                {}
-            ,
-
-            "accessors" : 
-                {}
-            ,
-
-{},
-
-            "asset" : {{
-                "version" : "2.0"
-            }}
-        }}
-    "#,
-        scene_root.0,
-        nodes.write_nodes(),
-        serde_json::to_string_pretty(&mesh).unwrap(),
+    let document = GltfDocument::new(
         buffer_name,
-        buffer_writer.buffer_len(),
-        buffer_views,
-        accessors,
-        gltf_parts,
+        &buffer_writer,
+        vec![mesh],
+        material_data,
+        scene_root,
+        nodes,
+        skins,
+        animations,
     );
 
-    gltf_text
+    serde_json::to_string_pretty(&document).unwrap()
 }
