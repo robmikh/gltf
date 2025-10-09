@@ -4,9 +4,9 @@ use serde::Serialize;
 use serde_with::skip_serializing_none;
 
 use crate::{
+    Model, Vertex,
     buffer::{AccessorIndex, BufferTypeEx, BufferViewTarget, BufferWriter, MinMax},
     material::MaterialIndex,
-    Model, Vertex,
 };
 
 #[skip_serializing_none]

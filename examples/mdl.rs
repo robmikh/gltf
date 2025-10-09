@@ -8,8 +8,8 @@ use std::{
 
 use glam::{Mat4, Vec3, Vec4, Vec4Swizzles};
 use gsparser::mdl::{
-    null_terminated_bytes_to_str, BoneChannelAnimation, ComponentTransformTarget, MdlFile,
-    MdlMeshSequenceType, MdlMeshVertex, MdlModel, VectorChannel,
+    BoneChannelAnimation, ComponentTransformTarget, MdlFile, MdlMeshSequenceType, MdlMeshVertex,
+    MdlModel, VectorChannel, null_terminated_bytes_to_str,
 };
 use id_tree::{
     InsertBehavior::{AsRoot, UnderNode},
@@ -19,6 +19,7 @@ use id_tree::{
 use util::coordinates::{convert_coordinates, write_and_convert_channel};
 
 use gltf::{
+    Mesh, Model,
     animation::{
         Animation, AnimationInterpolation, AnimationTarget, Animations, Channel, ChannelTarget,
         Sampler,
@@ -31,8 +32,8 @@ use gltf::{
     },
     node::{MeshIndex, Node, NodeIndex, Nodes},
     skin::{Skin, SkinIndex, Skins},
-    transform::{quat_from_euler, ComponentTransform},
-    vertex_def, Mesh, Model,
+    transform::{ComponentTransform, quat_from_euler},
+    vertex_def,
 };
 
 vertex_def! {
@@ -483,9 +484,11 @@ fn process_animation(
 ) -> bool {
     if !animations.is_empty() {
         let animation_length = channels[animations.first().unwrap().1].keyframes.len();
-        assert!(animations
-            .iter()
-            .all(|(_, index)| channels[*index].keyframes.len() == animation_length));
+        assert!(
+            animations
+                .iter()
+                .all(|(_, index)| channels[*index].keyframes.len() == animation_length)
+        );
 
         let mut new_keyframes = Vec::with_capacity(animation_length);
         for i in 0..animation_length {

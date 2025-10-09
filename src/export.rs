@@ -5,11 +5,11 @@ use crate::{
 };
 
 use super::{
+    Model, Vertex,
     buffer::BufferWriter,
     material::MaterialData,
     node::{NodeIndex, Nodes},
     skin::Skins,
-    Model, Vertex,
 };
 
 pub fn write_gltf<T: Vertex>(

@@ -1,5 +1,5 @@
 use glam::{Mat4, Vec3, Vec4};
-use serde::{ser::SerializeStruct, Serialize, Serializer};
+use serde::{Serialize, Serializer, ser::SerializeStruct};
 use serde_repr::Serialize_repr;
 use serde_with::skip_serializing_none;
 
