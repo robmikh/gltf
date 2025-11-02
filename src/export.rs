@@ -15,19 +15,19 @@ use super::{
 pub fn write_gltf<T: Vertex>(
     buffer_source: BufferSource,
     buffer_writer: &mut BufferWriter,
-    model: &Model<T>,
+    models: &[Model<T>],
     material_data: &MaterialData,
     scene_root: NodeIndex,
     nodes: &Nodes,
     skins: &Skins,
     animations: &Animations,
 ) -> String {
-    let mesh = Mesh::new(model, buffer_writer);
+    let meshes: Vec<_> = models.iter().map(|x| Mesh::new(x, buffer_writer)).collect();
 
     let document = GltfDocument::new(
         buffer_source,
         &buffer_writer,
-        vec![mesh],
+        meshes,
         material_data,
         scene_root,
         nodes,

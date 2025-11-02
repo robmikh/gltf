@@ -366,7 +366,7 @@ pub fn export<P: AsRef<Path>>(
     let gltf_text = write_gltf(
         gltf::document::BufferSource::Uri(buffer_name),
         &mut buffer_writer,
-        &converted_model,
+        &[converted_model],
         &material_data,
         scene_root,
         &nodes,
